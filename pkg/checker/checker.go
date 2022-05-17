@@ -20,7 +20,7 @@ func BalanceCheck(
 		return fmt.Errorf("fetching actual balances: %w", err)
 	}
 
-	expectedBalances, err := actual(ctx, addr)
+	expectedBalances, err := expected(ctx, addr)
 	if err != nil {
 		return fmt.Errorf("fetching expected balances: %w", err)
 	}
