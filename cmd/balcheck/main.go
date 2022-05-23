@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"context"
 	"flag"
 	"fmt"
 	"net/http"
@@ -18,8 +17,6 @@ var listenAdrr = flag.String("listen-addr", ":8081", "address to start http serv
 
 func main() {
 	flag.Parse()
-
-	ctx := context.Background()
 
 	w := golog.NewBufWriter(
 		golog.NewJsonEncoder(golog.DefaultJsonConfig()),
@@ -45,7 +42,7 @@ func main() {
 	fmt.Printf("Starting server on %s\n", serveAddr)
 
 	r := mux.NewRouter()
-	r.HandleFunc("/check/{address}", account.CheckAddress(ctx, emerisClient, w)).Methods("GET")
+	r.HandleFunc("/check/{address}", account.CheckAddress(emerisClient, w)).Methods("GET")
 	err := http.ListenAndServe(serveAddr, r)
 	if err != nil {
 		panic(err)

@@ -1,7 +1,6 @@
 package account
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/damianopetrungaro/golog"
@@ -12,9 +11,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func CheckAddress(ctx context.Context, emerisClient *emeris.Client, w *golog.BufWriter) func(http.ResponseWriter,
+func CheckAddress(emerisClient *emeris.Client, w *golog.BufWriter) func(http.ResponseWriter,
 	*http.Request) {
 	return func(response http.ResponseWriter, request *http.Request) {
+		ctx := request.Context()
 		vars := mux.Vars(request)
 		chains, err := emerisClient.Chains(ctx)
 		if err != nil {
