@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/damianopetrungaro/golog"
-	"github.com/emerishq/balcheck/api/utils"
 	"github.com/emerishq/balcheck/pkg/bech32"
 	"github.com/emerishq/balcheck/pkg/checker"
 	"github.com/emerishq/balcheck/pkg/emeris"
@@ -46,7 +45,7 @@ func CheckAddress(ctx context.Context, emerisClient *emeris.Client, w *golog.Buf
 				)
 				log.Info(ctx, "started testing")
 
-				err := utils.BalanceCheck(ctx, addr, lcdClient, emerisClient)
+				err := checker.BalanceCheck(ctx, addr, emerisClient.Balances, lcdClient.Balances)
 				if err != nil {
 					log.With(golog.Err(err)).Error(ctx, "balance mismatch")
 				}
@@ -64,7 +63,7 @@ func CheckAddress(ctx context.Context, emerisClient *emeris.Client, w *golog.Buf
 				)
 				log.Info(ctx, "started testing")
 
-				err := utils.StakingBalanceCheck(ctx, addr, lcdClient, emerisClient)
+				err := checker.BalanceCheck(ctx, addr, emerisClient.StakingBalances, lcdClient.StakingBalances)
 				if err != nil {
 					log.With(golog.Err(err)).Error(ctx, "staking balance mismatch")
 				}
@@ -82,7 +81,7 @@ func CheckAddress(ctx context.Context, emerisClient *emeris.Client, w *golog.Buf
 				)
 				log.Info(ctx, "started testing")
 
-				err := utils.UnstakingBalanceCheck(ctx, addr, lcdClient, emerisClient)
+				err := checker.BalanceCheck(ctx, addr, emerisClient.UnstakingBalances, lcdClient.UnstakingBalances)
 				if err != nil {
 					log.With(golog.Err(err)).Error(ctx, "unbonding balance mismatch")
 				}

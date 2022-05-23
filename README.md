@@ -16,7 +16,6 @@ Available checks are:
 ```sh
 make balcheck
 ./build/balcheck
-go run ./cmd/balcheck -addr cosmos1qymla9gh8z2cmrylt008hkre0gry6h92sxgazg
 ```
 
 This command will start `balcheck` HTTP server (run default on `:8081`).
