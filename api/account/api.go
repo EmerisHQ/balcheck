@@ -1,6 +1,7 @@
 package account
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/damianopetrungaro/golog"
@@ -25,13 +26,12 @@ func CheckAddress(emerisClient *emeris.Client, w *golog.BufWriter) func(http.Res
 
 		addr, err := bech32.HexDecode(vars["address"])
 		if err != nil {
-			response.WriteHeader(http.StatusInternalServerError)
+			response.WriteHeader(http.StatusBadRequest)
 			response.Write([]byte(err.Error()))
 			return
 		}
 
-		response.WriteHeader(http.StatusOK)
-		response.Write([]byte("Started balance checking"))
+		fmt.Fprint(response, "Started balance checking")
 
 		for _, chain := range chains {
 			go func(chain checker.Chain) {
