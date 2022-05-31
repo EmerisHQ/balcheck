@@ -1,6 +1,7 @@
 package account
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -15,7 +16,7 @@ import (
 func CheckAddress(emerisClient *emeris.Client, w *golog.BufWriter) func(http.ResponseWriter,
 	*http.Request) {
 	return func(response http.ResponseWriter, request *http.Request) {
-		ctx := request.Context()
+		ctx := context.Background()
 		vars := mux.Vars(request)
 		chains, err := emerisClient.Chains(ctx)
 		if err != nil {
