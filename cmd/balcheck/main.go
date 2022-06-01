@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,13 +9,16 @@ import (
 	"github.com/damianopetrungaro/golog"
 	"github.com/emerishq/balcheck/api/account"
 	"github.com/emerishq/balcheck/pkg/emeris"
+	"github.com/emerishq/emeris-utils/configuration"
 	"github.com/gorilla/mux"
 )
 
-var listenAdrr = flag.String("listen-addr", ":8081", "address to start http server (default localhost:8081)")
-
 func main() {
-	flag.Parse()
+	var c Config
+	configuration.ReadConfig(&c, "demeris-api", map[string]string{
+		"ListenAddr": ":8000",
+		"Debug":      "false",
+	})
 
 	w := golog.NewBufWriter(
 		golog.NewJsonEncoder(golog.DefaultJsonConfig()),
@@ -25,26 +27,33 @@ func main() {
 		golog.DEBUG,
 	)
 	defer w.Flush()
+	minLogLevel := golog.INFO
+	if c.Debug {
+		minLogLevel = golog.DEBUG
+	}
 	logger := golog.New(
 		w,
-		golog.NewLevelCheckerOption(golog.DEBUG),
+		golog.NewLevelCheckerOption(minLogLevel),
 	)
 	golog.SetLogger(logger)
 
-	serveAddr := ":8081"
-
-	if listenAdrr != nil && len(*listenAdrr) != 0 {
-		serveAddr = *listenAdrr
-	}
-
 	emerisClient := emeris.NewClient()
 
-	fmt.Printf("Starting server on %s\n", serveAddr)
+	fmt.Printf("Starting server on %s\n", c.ListenAddr)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/check/{address}", account.CheckAddress(emerisClient, w)).Methods("GET")
-	err := http.ListenAndServe(serveAddr, r)
+	err := http.ListenAndServe(c.ListenAddr, r)
 	if err != nil {
 		panic(err)
 	}
+}
+
+type Config struct {
+	ListenAddr string `validate:"required"`
+	Debug      bool
+}
+
+func (c *Config) Validate() error {
+	return nil
 }
