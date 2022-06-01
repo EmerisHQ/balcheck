@@ -2,21 +2,22 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"flag"
-	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/damianopetrungaro/golog"
-	"github.com/emerishq/balcheck/api/account"
+	"github.com/emerishq/balcheck/pkg/bech32"
 	"github.com/emerishq/balcheck/pkg/emeris"
-	"github.com/gorilla/mux"
+	"github.com/emerishq/balcheck/utils"
 )
 
-var listenAdrr = flag.String("listen-addr", ":8081", "address to start http server (default localhost:8081)")
+var fullAddr = flag.String("addr", "", "address to check (e.g. cosmos1qymla9gh8z2cmrylt008hkre0gry6h92sxgazg)")
 
 func main() {
 	flag.Parse()
+
+	ctx := context.Background()
 
 	w := golog.NewBufWriter(
 		golog.NewJsonEncoder(golog.DefaultJsonConfig()),
@@ -31,20 +32,19 @@ func main() {
 	)
 	golog.SetLogger(logger)
 
-	serveAddr := ":8081"
-
-	if listenAdrr != nil && len(*listenAdrr) != 0 {
-		serveAddr = *listenAdrr
+	if fullAddr == nil || len(*fullAddr) == 0 {
+		logger.Fatal(ctx, "missing address")
 	}
-
-	emerisClient := emeris.NewClient()
-
-	fmt.Printf("Starting server on %s\n", serveAddr)
-
-	r := mux.NewRouter()
-	r.HandleFunc("/check/{address}", account.CheckAddress(emerisClient, w)).Methods("GET")
-	err := http.ListenAndServe(serveAddr, r)
+	addr, err := bech32.HexDecode(*fullAddr)
 	if err != nil {
 		panic(err)
 	}
+
+	emerisClient := emeris.NewClient()
+	chains, err := emerisClient.Chains(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	utils.CheckBalances(emerisClient, chains, w, addr, true)
 }
