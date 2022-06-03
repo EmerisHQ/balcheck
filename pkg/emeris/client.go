@@ -189,10 +189,10 @@ func (c *Client) UnstakingBalances(ctx context.Context, addr string) (checker.Ba
 
 type UnstakingBalancesResponse struct {
 	UnbondingDelegations []struct {
-		ValidatorAddress string
+		ValidatorAddress string `json:"validator_address"`
 		Entries          []struct {
-			Balance        string
-			CreationHeight int
-		}
-	}
+			Balance        string `json:"balance"`
+			CreationHeight int    `json:"creation_height"`
+		} `json:"entries"`
+	} `json:"unbonding_delegations"`
 }

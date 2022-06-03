@@ -32,7 +32,7 @@ func Balances(ctx context.Context, emerisClient *emeris.Client, chains []checker
 		wg.Add(1)
 		go func(chain checker.Chain) {
 			lcdClient := lcd.NewClient(chain)
-			err := checker.RunBalanceCheck(ctx, addr, emerisClient.Balances, lcdClient.Balances)
+			err := checker.RunBalanceCheck(ctx, addr, lcdClient.Balances, emerisClient.Balances)
 			if err != nil {
 				errsChan <- &BalanceMismatchErr{
 					CheckName:    "balance",
@@ -50,7 +50,7 @@ func Balances(ctx context.Context, emerisClient *emeris.Client, chains []checker
 		wg.Add(1)
 		go func(chain checker.Chain) {
 			lcdClient := lcd.NewClient(chain)
-			err := checker.RunBalanceCheck(ctx, addr, emerisClient.StakingBalances, lcdClient.StakingBalances)
+			err := checker.RunBalanceCheck(ctx, addr, lcdClient.StakingBalances, emerisClient.StakingBalances)
 			if err != nil {
 				errsChan <- &BalanceMismatchErr{
 					CheckName:    "staking balance",
@@ -68,7 +68,7 @@ func Balances(ctx context.Context, emerisClient *emeris.Client, chains []checker
 		wg.Add(1)
 		go func(chain checker.Chain) {
 			lcdClient := lcd.NewClient(chain)
-			err := checker.RunBalanceCheck(ctx, addr, emerisClient.UnstakingBalances, lcdClient.UnstakingBalances)
+			err := checker.RunBalanceCheck(ctx, addr, lcdClient.UnstakingBalances, emerisClient.UnstakingBalances)
 			if err != nil {
 				errsChan <- &BalanceMismatchErr{
 					CheckName:    "unbonding balance",

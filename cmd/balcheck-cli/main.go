@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"os"
 
 	"github.com/damianopetrungaro/golog"
@@ -13,32 +14,42 @@ import (
 	"github.com/emerishq/balcheck/pkg/emeris"
 )
 
-var fullAddr = flag.String("addr", "", "address to check (e.g. cosmos1qymla9gh8z2cmrylt008hkre0gry6h92sxgazg)")
+var (
+	bech32Addr = flag.String("addr", "", "bech32 address to check (e.g. cosmos1qymla9gh8z2cmrylt008hkre0gry6h92sxgazg)")
+	verbose    = flag.Bool("v", false, "enable verbose mode")
+)
 
 func main() {
 	flag.Parse()
 
 	ctx := context.Background()
 
+	logLevel := golog.ERROR
+	if *verbose {
+		logLevel = golog.DEBUG
+	}
+
 	w := golog.NewBufWriter(
-		golog.NewJsonEncoder(golog.DefaultJsonConfig()),
+		golog.NewTextEncoder(golog.DefaultTextConfig()),
 		bufio.NewWriter(os.Stderr),
 		golog.DefaultErrorHandler(),
-		golog.DEBUG,
+		logLevel,
 	)
 	defer w.Flush()
 	logger := golog.New(
 		w,
-		golog.NewLevelCheckerOption(golog.DEBUG),
+		golog.NewLevelCheckerOption(logLevel),
 	)
 	golog.SetLogger(logger)
 
-	if fullAddr == nil || len(*fullAddr) == 0 {
-		logger.Fatal(ctx, "missing address")
+	if bech32Addr == nil || len(*bech32Addr) == 0 {
+		flag.Usage()
+		os.Exit(1)
 	}
-	addr, err := bech32.HexDecode(*fullAddr)
+	addr, err := bech32.HexDecode(*bech32Addr)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "%q is not a valid bech32 address\n", *bech32Addr)
+		os.Exit(1)
 	}
 
 	emerisClient := emeris.NewClient()
@@ -48,18 +59,22 @@ func main() {
 	}
 
 	errs := check.Balances(ctx, emerisClient, chains, addr)
-	for _, e := range errs {
-		var mismatchErr *check.BalanceMismatchErr
-		if errors.As(e, &mismatchErr) {
-			golog.With(
-				golog.String("check", mismatchErr.CheckName),
-				golog.String("chain", mismatchErr.ChainName),
-				golog.String("api_url", mismatchErr.APIURL),
-				golog.String("lcd_url", mismatchErr.LCDURL),
-				golog.Err(mismatchErr.WrappedError),
-			).Error(ctx, "balance mismatch")
-		} else {
-			golog.With(golog.Err(e)).Error(ctx, "error")
+	if len(errs) > 0 {
+		for _, e := range errs {
+			var mismatchErr *check.BalanceMismatchErr
+			if errors.As(e, &mismatchErr) {
+				golog.With(
+					golog.String("check", mismatchErr.CheckName),
+					golog.String("chain", mismatchErr.ChainName),
+					golog.String("api_url", mismatchErr.APIURL),
+					golog.String("lcd_url", mismatchErr.LCDURL),
+					golog.Err(mismatchErr.WrappedError),
+				).Error(ctx, "balance mismatch")
+			} else {
+				golog.With(golog.Err(e)).Error(ctx, "error")
+			}
 		}
+		os.Exit(1)
 	}
+	fmt.Printf("Check balances OK for %q\n", *bech32Addr)
 }
