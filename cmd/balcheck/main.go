@@ -12,6 +12,7 @@ import (
 	"github.com/emerishq/balcheck/pkg/emeris"
 	"github.com/emerishq/emeris-utils/configuration"
 	"github.com/getsentry/sentry-go"
+	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/gorilla/mux"
 )
 
@@ -19,7 +20,7 @@ var Version = "not specified"
 
 func main() {
 	var c Config
-	configuration.ReadConfig(&c, "demeris-api", map[string]string{
+	configuration.ReadConfig(&c, "balcheck", map[string]string{
 		"ListenAddr":             ":8000",
 		"Debug":                  "false",
 		"SentryEnvironment":      "notset",
@@ -60,8 +61,9 @@ func main() {
 
 	fmt.Printf("Starting server on %s\n", c.ListenAddr)
 
+	sentryHandler := sentryhttp.New(sentryhttp.Options{})
 	r := mux.NewRouter()
-	r.HandleFunc("/check/{address}", account.CheckAddress(emerisClient)).Methods("GET")
+	r.HandleFunc("/check/{address}", sentryHandler.HandleFunc(account.CheckAddress(emerisClient))).Methods("GET")
 	err := http.ListenAndServe(c.ListenAddr, r)
 	if err != nil {
 		panic(err)
