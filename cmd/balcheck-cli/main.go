@@ -8,8 +8,8 @@ import (
 
 	"github.com/damianopetrungaro/golog"
 	"github.com/emerishq/balcheck/pkg/bech32"
+	"github.com/emerishq/balcheck/pkg/check"
 	"github.com/emerishq/balcheck/pkg/emeris"
-	"github.com/emerishq/balcheck/utils"
 )
 
 var fullAddr = flag.String("addr", "", "address to check (e.g. cosmos1qymla9gh8z2cmrylt008hkre0gry6h92sxgazg)")
@@ -46,5 +46,5 @@ func main() {
 		panic(err)
 	}
 
-	utils.CheckBalances(emerisClient, chains, w, addr, true)
+	check.Balances(ctx, emerisClient, chains, addr)
 }

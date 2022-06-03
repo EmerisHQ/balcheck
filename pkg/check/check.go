@@ -1,4 +1,6 @@
-package utils
+// Package check implements the actual checks that can be run. Think of them as
+// a sort of "unit tests".
+package check
 
 import (
 	"context"
@@ -10,7 +12,7 @@ import (
 	"github.com/emerishq/balcheck/pkg/lcd"
 )
 
-func CheckBalances(ctx context.Context, emerisClient *emeris.Client, chains []checker.Chain, addr string) {
+func Balances(ctx context.Context, emerisClient *emeris.Client, chains []checker.Chain, addr string) {
 	wg := sync.WaitGroup{}
 
 	for _, chain := range chains {
@@ -25,7 +27,7 @@ func CheckBalances(ctx context.Context, emerisClient *emeris.Client, chains []ch
 			)
 			log.Info(ctx, "started testing")
 
-			err := checker.BalanceCheck(ctx, addr, emerisClient.Balances, lcdClient.Balances)
+			err := checker.RunBalanceCheck(ctx, addr, emerisClient.Balances, lcdClient.Balances)
 			if err != nil {
 				log.With(golog.Err(err)).Error(ctx, "balance mismatch")
 			}
@@ -45,7 +47,7 @@ func CheckBalances(ctx context.Context, emerisClient *emeris.Client, chains []ch
 			)
 			log.Info(ctx, "started testing")
 
-			err := checker.BalanceCheck(ctx, addr, emerisClient.StakingBalances, lcdClient.StakingBalances)
+			err := checker.RunBalanceCheck(ctx, addr, emerisClient.StakingBalances, lcdClient.StakingBalances)
 			if err != nil {
 				log.With(golog.Err(err)).Error(ctx, "staking balance mismatch")
 			}
@@ -65,7 +67,7 @@ func CheckBalances(ctx context.Context, emerisClient *emeris.Client, chains []ch
 			)
 			log.Info(ctx, "started testing")
 
-			err := checker.BalanceCheck(ctx, addr, emerisClient.UnstakingBalances, lcdClient.UnstakingBalances)
+			err := checker.RunBalanceCheck(ctx, addr, emerisClient.UnstakingBalances, lcdClient.UnstakingBalances)
 			if err != nil {
 				log.With(golog.Err(err)).Error(ctx, "unbonding balance mismatch")
 			}

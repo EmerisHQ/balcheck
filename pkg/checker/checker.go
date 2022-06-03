@@ -1,3 +1,6 @@
+// Package checker contains the "engine" that can run checks. It is agnostic to
+// the logic of "how to fetch data", it only contains the logic for "how to
+// compare the data".
 package checker
 
 import (
@@ -9,7 +12,7 @@ import (
 
 type BalanceProviderFunc func(ctx context.Context, addr string) (Balances, error)
 
-func BalanceCheck(
+func RunBalanceCheck(
 	ctx context.Context,
 	addr string,
 	expected BalanceProviderFunc,

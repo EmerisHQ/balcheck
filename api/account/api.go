@@ -5,19 +5,16 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/damianopetrungaro/golog"
 	"github.com/emerishq/balcheck/pkg/bech32"
+	"github.com/emerishq/balcheck/pkg/check"
 	"github.com/emerishq/balcheck/pkg/emeris"
-	"github.com/emerishq/balcheck/utils"
 	"github.com/gorilla/mux"
 )
 
-func CheckAddress(emerisClient *emeris.Client, w *golog.BufWriter) func(http.ResponseWriter,
-	*http.Request) {
+func CheckAddress(emerisClient *emeris.Client) func(http.ResponseWriter, *http.Request) {
 	return func(response http.ResponseWriter, request *http.Request) {
-		ctx := context.Background()
 		vars := mux.Vars(request)
-		chains, err := emerisClient.Chains(ctx)
+		chains, err := emerisClient.Chains(request.Context())
 		if err != nil {
 			response.WriteHeader(http.StatusInternalServerError)
 			response.Write([]byte(err.Error()))
@@ -33,6 +30,8 @@ func CheckAddress(emerisClient *emeris.Client, w *golog.BufWriter) func(http.Res
 
 		fmt.Fprint(response, "Started balance checking")
 
-		utils.CheckBalances(emerisClient, chains, w, addr, false)
+		go func() {
+			check.Balances(context.Background(), emerisClient, chains, addr)
+		}()
 	}
 }
