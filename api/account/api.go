@@ -15,28 +15,26 @@ import (
 )
 
 func CheckAddress(emerisClient *emeris.Client) http.HandlerFunc {
-	return func(response http.ResponseWriter, request *http.Request) {
-		vars := mux.Vars(request)
-		chains, err := emerisClient.Chains(request.Context())
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		chains, err := emerisClient.Chains(r.Context())
 		if err != nil {
-			response.WriteHeader(http.StatusInternalServerError)
-			_, _ = response.Write([]byte(err.Error()))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		addr, err := bech32.HexDecode(vars["address"])
 		if err != nil {
-			response.WriteHeader(http.StatusBadRequest)
-			_, _ = response.Write([]byte(err.Error()))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		_, _ = fmt.Fprint(response, "Started balance checking")
+		_, _ = fmt.Fprint(w, "Started balance checking")
 
 		go func() {
 			errs := check.Balances(context.Background(), emerisClient, chains, addr)
 
-			hub := sentry.GetHubFromContext(request.Context())
+			hub := sentry.GetHubFromContext(r.Context())
 			for _, e := range errs {
 				var mismatchErr *check.BalanceMismatchErr
 				if errors.As(e, &mismatchErr) {
@@ -48,7 +46,7 @@ func CheckAddress(emerisClient *emeris.Client) http.HandlerFunc {
 				} else {
 					golog.With(
 						golog.Err(e),
-					).Error(request.Context(), "Error checking balance")
+					).Error(r.Context(), "Error checking balance")
 				}
 			}
 		}()
