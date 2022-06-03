@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  pull_request:
+    types: closed
+    branches: [main]
+
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Tag
+        uses: K-Phoen/semver-release-action@master
+        with:
+          release_branch: main
+          tag_format: "v%major%.%minor%.%patch%"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Manually trigger the docker build
+  #   # (workflow can't trigger other workflows)
+  docker-build:
+    needs: [release]
+    uses: ./.github/workflows/docker-build.yml

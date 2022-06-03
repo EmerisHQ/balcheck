@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      day: sunday
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "DBot GH Actions"
+
+  - package-ecosystem: gomod
+    directory: "/"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "DBot Go"
+    ignore:
+      - dependency-name: "k8s.io/*"
+      - dependency-name: "sigs.k8s.io/*"
+      - dependency-name: "github.com/cosmos/*"
+      - dependency-name: "github.com/tendermint/*"
+      - dependency-name: "github.com/gravity-devs/*"
+      - dependency-name: "github.com/allinbits/*"
+      - dependency-name: "github.com/emerishq/*"
