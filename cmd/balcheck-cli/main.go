@@ -59,18 +59,22 @@ func main() {
 	}
 
 	errs := check.Balances(ctx, emerisClient, chains, addr)
-	for _, e := range errs {
-		var mismatchErr *check.BalanceMismatchErr
-		if errors.As(e, &mismatchErr) {
-			golog.With(
-				golog.String("check", mismatchErr.CheckName),
-				golog.String("chain", mismatchErr.ChainName),
-				golog.String("api_url", mismatchErr.APIURL),
-				golog.String("lcd_url", mismatchErr.LCDURL),
-				golog.Err(mismatchErr.WrappedError),
-			).Error(ctx, "balance mismatch")
-		} else {
-			golog.With(golog.Err(e)).Error(ctx, "error")
+	if len(errs) > 0 {
+		for _, e := range errs {
+			var mismatchErr *check.BalanceMismatchErr
+			if errors.As(e, &mismatchErr) {
+				golog.With(
+					golog.String("check", mismatchErr.CheckName),
+					golog.String("chain", mismatchErr.ChainName),
+					golog.String("api_url", mismatchErr.APIURL),
+					golog.String("lcd_url", mismatchErr.LCDURL),
+					golog.Err(mismatchErr.WrappedError),
+				).Error(ctx, "balance mismatch")
+			} else {
+				golog.With(golog.Err(e)).Error(ctx, "error")
+			}
 		}
+		os.Exit(1)
 	}
+	fmt.Printf("Check balances OK for %q\n", *bech32Addr)
 }
