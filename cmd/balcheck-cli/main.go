@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"errors"
 	"flag"
 	"os"
 
@@ -46,5 +47,19 @@ func main() {
 		panic(err)
 	}
 
-	check.Balances(ctx, emerisClient, chains, addr)
+	errs := check.Balances(ctx, emerisClient, chains, addr)
+	for _, e := range errs {
+		var mismatchErr *check.BalanceMismatchErr
+		if errors.As(e, &mismatchErr) {
+			golog.With(
+				golog.String("check", mismatchErr.CheckName),
+				golog.String("chain", mismatchErr.ChainName),
+				golog.String("api_url", mismatchErr.APIURL),
+				golog.String("lcd_url", mismatchErr.LCDURL),
+				golog.Err(mismatchErr.WrappedError),
+			).Error(ctx, "balance mismatch")
+		} else {
+			golog.With(golog.Err(e)).Error(ctx, "error")
+		}
+	}
 }
