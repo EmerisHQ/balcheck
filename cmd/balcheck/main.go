@@ -2,21 +2,43 @@ package main
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/damianopetrungaro/golog"
 	"github.com/emerishq/balcheck/api/account"
 	"github.com/emerishq/balcheck/pkg/emeris"
+	"github.com/emerishq/emeris-utils/configuration"
+	"github.com/getsentry/sentry-go"
+	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/gorilla/mux"
 )
 
-var listenAdrr = flag.String("listen-addr", ":8081", "address to start http server (default localhost:8081)")
+var Version = "not specified"
 
 func main() {
-	flag.Parse()
+	var c Config
+	configuration.ReadConfig(&c, "balcheck", map[string]string{
+		"ListenAddr":             ":8000",
+		"Debug":                  "false",
+		"SentryEnvironment":      "notset",
+		"SentrySampleRate":       "1.0",
+		"SentryTracesSampleRate": "0.3",
+	})
+
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn:              c.SentryDSN,
+		Release:          Version,
+		SampleRate:       c.SentrySampleRate,
+		TracesSampleRate: c.SentryTracesSampleRate,
+		Environment:      c.SentryEnvironment,
+		AttachStacktrace: true,
+	}); err != nil {
+		fmt.Printf("Sentry initialization failed: %v\n", err)
+	}
+	defer sentry.Flush(2 * time.Second)
 
 	w := golog.NewBufWriter(
 		golog.NewJsonEncoder(golog.DefaultJsonConfig()),
@@ -25,26 +47,38 @@ func main() {
 		golog.DEBUG,
 	)
 	defer w.Flush()
+	minLogLevel := golog.INFO
+	if c.Debug {
+		minLogLevel = golog.DEBUG
+	}
 	logger := golog.New(
 		w,
-		golog.NewLevelCheckerOption(golog.DEBUG),
+		golog.NewLevelCheckerOption(minLogLevel),
 	)
 	golog.SetLogger(logger)
 
-	serveAddr := ":8081"
-
-	if listenAdrr != nil && len(*listenAdrr) != 0 {
-		serveAddr = *listenAdrr
-	}
-
 	emerisClient := emeris.NewClient()
 
-	fmt.Printf("Starting server on %s\n", serveAddr)
+	fmt.Printf("Starting server on %s\n", c.ListenAddr)
 
+	sentryHandler := sentryhttp.New(sentryhttp.Options{})
 	r := mux.NewRouter()
-	r.HandleFunc("/check/{address}", account.CheckAddress(emerisClient, w)).Methods("GET")
-	err := http.ListenAndServe(serveAddr, r)
+	r.HandleFunc("/check/{address}", sentryHandler.HandleFunc(account.CheckAddress(emerisClient))).Methods("GET")
+	err := http.ListenAndServe(c.ListenAddr, r)
 	if err != nil {
 		panic(err)
 	}
+}
+
+type Config struct {
+	ListenAddr             string `validate:"required"`
+	Debug                  bool
+	SentryDSN              string
+	SentryEnvironment      string
+	SentrySampleRate       float64
+	SentryTracesSampleRate float64
+}
+
+func (c *Config) Validate() error {
+	return nil
 }

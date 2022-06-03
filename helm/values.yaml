@@ -1,0 +1,26 @@
+image: emeris/balcheck:latest
+imagePullPolicy: Always
+
+replicas: 3
+
+nodeSelector: {}
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 400m
+    memory: 512Mi
+
+ports:
+  http: 8000
+
+debug: true
+
+balcheck:
+  # no value means sentry is disabled
+  sentryDSN:
+  sentryEnvironment: local
+  sentrySampleRate: 1.0
+  sentryTracesSampleRate: 0.3

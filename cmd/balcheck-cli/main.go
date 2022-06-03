@@ -3,13 +3,14 @@ package main
 import (
 	"bufio"
 	"context"
+	"errors"
 	"flag"
 	"os"
 
 	"github.com/damianopetrungaro/golog"
 	"github.com/emerishq/balcheck/pkg/bech32"
+	"github.com/emerishq/balcheck/pkg/check"
 	"github.com/emerishq/balcheck/pkg/emeris"
-	"github.com/emerishq/balcheck/utils"
 )
 
 var fullAddr = flag.String("addr", "", "address to check (e.g. cosmos1qymla9gh8z2cmrylt008hkre0gry6h92sxgazg)")
@@ -46,5 +47,19 @@ func main() {
 		panic(err)
 	}
 
-	utils.CheckBalances(emerisClient, chains, w, addr, true)
+	errs := check.Balances(ctx, emerisClient, chains, addr)
+	for _, e := range errs {
+		var mismatchErr *check.BalanceMismatchErr
+		if errors.As(e, &mismatchErr) {
+			golog.With(
+				golog.String("check", mismatchErr.CheckName),
+				golog.String("chain", mismatchErr.ChainName),
+				golog.String("api_url", mismatchErr.APIURL),
+				golog.String("lcd_url", mismatchErr.LCDURL),
+				golog.Err(mismatchErr.WrappedError),
+			).Error(ctx, "balance mismatch")
+		} else {
+			golog.With(golog.Err(e)).Error(ctx, "error")
+		}
+	}
 }
