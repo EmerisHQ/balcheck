@@ -8,6 +8,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.45.4
 	github.com/damianopetrungaro/golog v1.6.0
 	github.com/emerishq/emeris-utils v1.9.0
+	github.com/getsentry/sentry-go v0.13.0
 	github.com/gorilla/mux v1.8.0
 )
 
