@@ -20,13 +20,16 @@ var Version = "not specified"
 
 func main() {
 	var c Config
-	configuration.ReadConfig(&c, "balcheck", map[string]string{
+	err := configuration.ReadConfig(&c, "balcheck", map[string]string{
 		"ListenAddr":             ":8000",
 		"Debug":                  "false",
 		"SentryEnvironment":      "notset",
 		"SentrySampleRate":       "1.0",
 		"SentryTracesSampleRate": "0.3",
 	})
+	if err != nil {
+		panic(fmt.Errorf("reading configuration: %w", err))
+	}
 
 	if err := sentry.Init(sentry.ClientOptions{
 		Dsn:              c.SentryDSN,
@@ -64,7 +67,7 @@ func main() {
 	sentryHandler := sentryhttp.New(sentryhttp.Options{})
 	r := mux.NewRouter()
 	r.HandleFunc("/check/{address}", sentryHandler.HandleFunc(account.CheckAddress(emerisClient))).Methods("GET")
-	err := http.ListenAndServe(c.ListenAddr, r)
+	err = http.ListenAndServe(c.ListenAddr, r)
 	if err != nil {
 		panic(err)
 	}
