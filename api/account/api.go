@@ -20,18 +20,18 @@ func CheckAddress(emerisClient *emeris.Client) http.HandlerFunc {
 		chains, err := emerisClient.Chains(request.Context())
 		if err != nil {
 			response.WriteHeader(http.StatusInternalServerError)
-			response.Write([]byte(err.Error()))
+			_, _ = response.Write([]byte(err.Error()))
 			return
 		}
 
 		addr, err := bech32.HexDecode(vars["address"])
 		if err != nil {
 			response.WriteHeader(http.StatusBadRequest)
-			response.Write([]byte(err.Error()))
+			_, _ = response.Write([]byte(err.Error()))
 			return
 		}
 
-		fmt.Fprint(response, "Started balance checking")
+		_, _ = fmt.Fprint(response, "Started balance checking")
 
 		go func() {
 			errs := check.Balances(context.Background(), emerisClient, chains, addr)
