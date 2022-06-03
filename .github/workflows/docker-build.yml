@@ -11,7 +11,7 @@ on:
       - released
 
 jobs:
-  api-server:
+  balcheck:
     runs-on: self-hosted
     outputs:
       version: ${{ steps.get_version.outputs.version-without-v }}
@@ -39,7 +39,7 @@ jobs:
           push: true
           context: .
           file: Dockerfile
-          tags: gcr.io/tendermint-dev/emeris-api-server:${{ steps.get_version.outputs.version-without-v }},gcr.io/tendermint-dev/emeris-api-server:${{ github.sha }}
+          tags: gcr.io/tendermint-dev/emeris-balcheck:${{ steps.get_version.outputs.version-without-v }},gcr.io/tendermint-dev/emeris-balcheck:${{ github.sha }}
           build-args: |
             GIT_TOKEN=${{ secrets.TENDERBOT_GIT_TOKEN }}
           cache-from: type=gha
@@ -47,7 +47,7 @@ jobs:
 
   deploy-on-dev:
     runs-on: self-hosted
-    needs: api-server
+    needs: balcheck
 
     steps:
       - name: Call repository_dispatch on demeris-backend
@@ -55,14 +55,14 @@ jobs:
         with:
           token: ${{ secrets.TENDERBOT_GIT_TOKEN }}
           repository: emerishq/demeris-backend
-          event-type: dev-push-api-server
+          event-type: dev-push-balcheck
           client-payload: |
             {
-              "repo_name":"demeris-api-server",
+              "repo_name":"demeris-balcheck",
               "branch_name":"main",
-              "image_name":"emeris-api-server",
+              "image_name":"emeris-balcheck",
               "image_sha":"${{ github.sha }}",
-              "version":"${{ needs.api-server.outputs.version }}",
-              "service_name":"api-server",
+              "version":"${{ needs.balcheck.outputs.version }}",
+              "service_name":"balcheck",
               "deploy_type":"deploy_dev"
             }
