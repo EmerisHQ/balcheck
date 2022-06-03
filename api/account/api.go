@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/damianopetrungaro/golog"
 	"github.com/emerishq/balcheck/pkg/bech32"
 	"github.com/emerishq/balcheck/pkg/check"
 	"github.com/emerishq/balcheck/pkg/emeris"
@@ -44,6 +45,10 @@ func CheckAddress(emerisClient *emeris.Client) http.HandlerFunc {
 						scope.SetTag("chain_name", mismatchErr.ChainName)
 						hub.CaptureException(e)
 					})
+				} else {
+					golog.With(
+						golog.Err(e),
+					).Error(request.Context(), "Error checking balance")
 				}
 			}
 		}()
