@@ -29,7 +29,7 @@ func CheckAddress(emerisClient *emeris.Client) http.HandlerFunc {
 			return
 		}
 
-		_, _ = fmt.Fprint(w, "Started balance checking")
+		fmt.Fprint(w, "Started balance checking")
 
 		go func() {
 			errs := check.Balances(context.Background(), emerisClient, chains, addr)
