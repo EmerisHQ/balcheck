@@ -10,15 +10,12 @@ import (
 	"github.com/emerishq/balcheck/pkg/lcd"
 )
 
-func CheckBalances(emerisClient *emeris.Client, chains []checker.Chain, w *golog.BufWriter, addr string, shouldWait bool) {
-	ctx := context.Background()
+func CheckBalances(ctx context.Context, emerisClient *emeris.Client, chains []checker.Chain, addr string) {
 	wg := sync.WaitGroup{}
+
 	for _, chain := range chains {
-		if shouldWait {
-			wg.Add(1)
-		}
+		wg.Add(1)
 		go func(chain checker.Chain) {
-			defer w.Flush()
 			lcdClient := lcd.NewClient(chain)
 			log := golog.With(
 				golog.String("check", "balances"),
@@ -32,16 +29,12 @@ func CheckBalances(emerisClient *emeris.Client, chains []checker.Chain, w *golog
 			if err != nil {
 				log.With(golog.Err(err)).Error(ctx, "balance mismatch")
 			}
-			if shouldWait {
-				wg.Done()
-			}
+			wg.Done()
 		}(chain)
 	}
 
 	for _, chain := range chains {
-		if shouldWait {
-			wg.Add(1)
-		}
+		wg.Add(1)
 		go func(chain checker.Chain) {
 			lcdClient := lcd.NewClient(chain)
 			log := golog.With(
@@ -56,16 +49,12 @@ func CheckBalances(emerisClient *emeris.Client, chains []checker.Chain, w *golog
 			if err != nil {
 				log.With(golog.Err(err)).Error(ctx, "staking balance mismatch")
 			}
-			if shouldWait {
-				wg.Done()
-			}
+			wg.Done()
 		}(chain)
 	}
 
 	for _, chain := range chains {
-		if shouldWait {
-			wg.Add(1)
-		}
+		wg.Add(1)
 		go func(chain checker.Chain) {
 			lcdClient := lcd.NewClient(chain)
 			log := golog.With(
@@ -80,12 +69,9 @@ func CheckBalances(emerisClient *emeris.Client, chains []checker.Chain, w *golog
 			if err != nil {
 				log.With(golog.Err(err)).Error(ctx, "unbonding balance mismatch")
 			}
-			if shouldWait {
-				wg.Done()
-			}
+			wg.Done()
 		}(chain)
 	}
-	if shouldWait {
-		wg.Wait()
-	}
+
+	wg.Wait()
 }
