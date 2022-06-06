@@ -26,6 +26,7 @@ func main() {
 		"SentryEnvironment":      "notset",
 		"SentrySampleRate":       "1.0",
 		"SentryTracesSampleRate": "0.3",
+		"EmerisApiURL":           "http://api-server:8000/",
 	})
 
 	if err := sentry.Init(sentry.ClientOptions{
@@ -57,7 +58,7 @@ func main() {
 	)
 	golog.SetLogger(logger)
 
-	emerisClient := emeris.NewClient()
+	emerisClient := emeris.NewClient(c.EmerisApiURL)
 
 	fmt.Printf("Starting server on %s\n", c.ListenAddr)
 
@@ -77,6 +78,7 @@ type Config struct {
 	SentryEnvironment      string
 	SentrySampleRate       float64
 	SentryTracesSampleRate float64
+	EmerisApiURL           string
 }
 
 func (c *Config) Validate() error {
