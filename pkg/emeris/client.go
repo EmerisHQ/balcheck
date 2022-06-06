@@ -16,15 +16,18 @@ type Client struct {
 	HTTP    *httpx.Client
 }
 
-func NewClient() *Client {
+func NewClient(baseURL string) *Client {
+	if !strings.HasSuffix(baseURL, "/") {
+		baseURL += "/"
+	}
 	return &Client{
-		BaseURL: "https://api.emeris.com",
+		BaseURL: baseURL,
 		HTTP:    httpx.NewClient(),
 	}
 }
 
 func (c *Client) BalancesURL(addr string) string {
-	return fmt.Sprintf("%s/v1/account/%s/balance", c.BaseURL, addr)
+	return fmt.Sprintf("%saccount/%s/balance", c.BaseURL, addr)
 }
 
 func (c *Client) Balances(ctx context.Context, addr string) (checker.Balances, error) {
@@ -69,7 +72,7 @@ type BalancesResponse struct {
 }
 
 func (c *Client) Chains(ctx context.Context) ([]checker.Chain, error) {
-	url := c.BaseURL + "/v1/chains"
+	url := c.BaseURL + "v1/chains"
 
 	golog.With(
 		golog.String("url", url),
@@ -132,7 +135,7 @@ type ChainsResponse struct {
 }
 
 func (c *Client) StakingBalancesURL(addr string) string {
-	return fmt.Sprintf("%s/v1/account/%s/stakingbalances", c.BaseURL, addr)
+	return fmt.Sprintf("%sv1/account/%s/stakingbalances", c.BaseURL, addr)
 }
 
 func (c *Client) StakingBalances(ctx context.Context, addr string) (checker.Balances, error) {
@@ -163,7 +166,7 @@ type StakingBalancesResponse struct {
 }
 
 func (c *Client) UnstakingBalancesURL(addr string) string {
-	return fmt.Sprintf("%s/v1/account/%s/unbondingdelegations", c.BaseURL, addr)
+	return fmt.Sprintf("%sv1/account/%s/unbondingdelegations", c.BaseURL, addr)
 }
 
 func (c *Client) UnstakingBalances(ctx context.Context, addr string) (checker.Balances, error) {

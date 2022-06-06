@@ -13,7 +13,10 @@ import (
 	"github.com/emerishq/balcheck/pkg/emeris"
 )
 
-var fullAddr = flag.String("addr", "", "address to check (e.g. cosmos1qymla9gh8z2cmrylt008hkre0gry6h92sxgazg)")
+var (
+	fullAddr = flag.String("addr", "", "address to check (e.g. cosmos1qymla9gh8z2cmrylt008hkre0gry6h92sxgazg)")
+	apiUrl   = flag.String("apiurl", "https://api.emeris.com/v1", "emeris api url (default https://api.emeris.com/v1)")
+)
 
 func main() {
 	flag.Parse()
@@ -41,7 +44,7 @@ func main() {
 		panic(err)
 	}
 
-	emerisClient := emeris.NewClient()
+	emerisClient := emeris.NewClient(*apiUrl)
 	chains, err := emerisClient.Chains(ctx)
 	if err != nil {
 		panic(err)
